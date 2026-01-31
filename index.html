@@ -30,6 +30,19 @@
       <div id="success-msg"></div>
 
       <button id="next-btn" class="next-level-btn" disabled>Nächstes Level</button>
+
+      <!-- Tutorial Overlay -->
+      <div id="tutorial-overlay" class="tutorial-overlay hidden">
+        <div class="tutorial-content">
+          <h3 id="tutorial-title"></h3>
+          <p id="tutorial-text"></p>
+          <div class="tutorial-controls">
+            <button id="tutorial-prev" class="tutorial-btn">← Zurück</button>
+            <span id="tutorial-progress"></span>
+            <button id="tutorial-next" class="tutorial-btn">Weiter →</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script type="module" src="js/game.js"></script>
