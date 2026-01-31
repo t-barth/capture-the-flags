@@ -42,7 +42,6 @@ class CaptureTheFlagGame {
         // UI elements
         this.successMsg = document.getElementById('success-msg');
         this.nextBtn = document.getElementById('next-btn');
-        this.solutionDisplay = document.getElementById('solution-display');
         this.levelIndicator = document.getElementById('level-indicator');
         this.overviewBtn = document.getElementById('overview-btn');
 
@@ -64,13 +63,26 @@ class CaptureTheFlagGame {
         this.nextBtn.addEventListener('click', () => this.generateLevel());
         this.overviewBtn.addEventListener('click', () => this.showLevelOverview());
         document.getElementById('reset-btn').addEventListener('click', () => this.resetCurrentLevel());
-        document.getElementById('solution-btn').addEventListener('click', () => this.showSolution());
 
         // Global pointer up to end drag
         window.addEventListener('pointerup', () => this.interactionHandler.endDrag());
 
         // Grid pointer leave to end drag
         document.getElementById('grid').addEventListener('pointerleave', () => this.interactionHandler.endDrag());
+
+        // Global pointermove for mobile touch support
+        document.getElementById('grid').addEventListener('pointermove', (e) => {
+            if (!this.interactionHandler.isDraggingActive()) return;
+
+            e.preventDefault();
+
+            // Get element under the pointer
+            const element = document.elementFromPoint(e.clientX, e.clientY);
+            if (element && element.classList.contains('cell') && element.dataset.cellIndex) {
+                const index = parseInt(element.dataset.cellIndex);
+                this.onPointerMove(index);
+            }
+        });
     }
 
     /**
@@ -100,9 +112,6 @@ class CaptureTheFlagGame {
         this.nextBtn.disabled = true;
         this.nextBtn.classList.remove('unlocked');
 
-        // Hide solution display
-        this.solutionDisplay.classList.remove('visible');
-
         // Convert minimal level data to puzzle format
         this.currentPuzzle = this.levelManager.levelToPuzzle(level);
 
@@ -116,7 +125,7 @@ class CaptureTheFlagGame {
         this.gridRenderer.render(
             this.currentPuzzle,
             (index, e) => this.onPointerDown(index, e),
-            (index) => this.onPointerOver(index)
+            (index) => this.onPointerMove(index)
         );
     }
 
@@ -134,7 +143,7 @@ class CaptureTheFlagGame {
     /**
      * Handles pointer down on a cell
      */
-    onPointerDown(index, event) {
+    onPointerDown(index, e) {
         this.interactionHandler.handlePointerDown(
             index,
             (i) => !this.gridRenderer.isDeadZone(i)
@@ -142,9 +151,9 @@ class CaptureTheFlagGame {
     }
 
     /**
-     * Handles pointer over on a cell
+     * Handles pointer move/over on a cell
      */
-    onPointerOver(index) {
+    onPointerMove(index) {
         this.interactionHandler.handlePointerOver(
             index,
             (i) => !this.gridRenderer.isDeadZone(i)
@@ -222,7 +231,6 @@ class CaptureTheFlagGame {
         this.nextBtn.disabled = true;
         this.nextBtn.classList.remove('unlocked');
         this.gridRenderer.reset();
-        this.solutionDisplay.classList.remove('visible');
     }
 
     /**
@@ -249,31 +257,65 @@ class CaptureTheFlagGame {
         this.levelGrid.innerHTML = '';
 
         const currentLevel = this.levelManager.getCurrentLevelNumber();
+        const unlockedLevel = this.getUnlockedLevel();
 
         for (let i = 1; i <= TOTAL_LEVELS; i++) {
             const btn = document.createElement('button');
             btn.className = 'level-btn';
             btn.textContent = i;
 
+            const isCompleted = this.completedLevels.has(i);
+            const isUnlocked = i <= unlockedLevel;
+
             // Add state classes
-            if (this.completedLevels.has(i)) {
+            if (isCompleted) {
                 btn.classList.add('completed');
             }
             if (i === currentLevel) {
                 btn.classList.add('current');
             }
+            if (!isUnlocked) {
+                btn.classList.add('locked');
+            }
 
-            // Add click handler
-            btn.addEventListener('click', () => this.selectLevel(i));
+            // Add click handler only for unlocked levels
+            if (isUnlocked) {
+                btn.addEventListener('click', () => this.selectLevel(i));
+            } else {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    // Optional: Show feedback that level is locked
+                });
+            }
 
             this.levelGrid.appendChild(btn);
         }
     }
 
     /**
+     * Gets the highest unlocked level (last completed + 1)
+     * @returns {number} The highest level number that can be played
+     */
+    getUnlockedLevel() {
+        if (this.completedLevels.size === 0) {
+            return 1; // First level is always unlocked
+        }
+
+        // Find the highest completed level
+        const maxCompleted = Math.max(...this.completedLevels);
+        return maxCompleted + 1;
+    }
+
+    /**
      * Handles level selection from overview
      */
     selectLevel(levelNumber) {
+        // Check if level is unlocked
+        const unlockedLevel = this.getUnlockedLevel();
+        if (levelNumber > unlockedLevel) {
+            return; // Level is locked, don't allow access
+        }
+
         const level = this.levelManager.goToLevel(levelNumber);
         if (level) {
             this.loadLevel(level);
@@ -312,40 +354,6 @@ class CaptureTheFlagGame {
         const currentLevel = this.levelManager.getCurrentLevelNumber();
         this.completedLevels.add(currentLevel);
         this.saveCompletedLevels();
-    }
-
-    /**
-     * Shows the solution for the current puzzle
-     */
-    showSolution() {
-        if (!this.currentPuzzle) return;
-
-        // Build solution text
-        let solutionText = '=== LEVEL INFO ===\n\n';
-
-        const deadZones = this.currentPuzzle.deadZoneIndices;
-        const flags = this.currentPuzzle.xPositions;
-
-        solutionText += `Dead Zones (${deadZones.length}):\n`;
-        solutionText += `  Indices: [${deadZones.join(', ')}]\n`;
-        solutionText += `  Coords: ${deadZones.map(i => {
-            const c = indexToCoords(i);
-            return `(${c.r},${c.c})`;
-        }).join(', ')}\n\n`;
-
-        solutionText += `Flags (${flags.length}):\n`;
-        solutionText += `  Indices: [${flags.join(', ')}]\n`;
-        solutionText += `  Coords: ${flags.map(i => {
-            const c = indexToCoords(i);
-            return `(${c.r},${c.c})`;
-        }).join(', ')}\n`;
-
-        // Display solution
-        this.solutionDisplay.textContent = solutionText;
-        this.solutionDisplay.classList.add('visible');
-
-        // Also log to console
-        console.log(solutionText);
     }
 
     /**

@@ -25,7 +25,7 @@ export class GridRenderer {
      * @param {Function} onPointerDown - Callback for pointer down events
      * @param {Function} onPointerOver - Callback for pointer over events
      */
-    render(puzzle, onPointerDown, onPointerOver) {
+    render(puzzle, onPointerDown, onPointerMove) {
         this.deadZoneIndices = puzzle.deadZoneIndices || [puzzle.deadZoneIndex];
         this.deadZoneIndex = this.deadZoneIndices[0]; // Backward compatibility
         this.xPositions = puzzle.xPositions;
@@ -38,6 +38,9 @@ export class GridRenderer {
             const isDeadZone = this.deadZoneIndices.includes(i);
             cell.className = 'cell' + (isDeadZone ? ' dead-zone' : '');
 
+            // Store index for touch detection
+            cell.dataset.cellIndex = i;
+
             // Set cell content (dead zone marker or flag)
             if (isDeadZone) {
                 cell.innerHTML = TEXT.DEAD_ZONE_MARKER;
@@ -46,8 +49,17 @@ export class GridRenderer {
             }
 
             // Attach event handlers
-            cell.onpointerdown = (e) => onPointerDown(i, e);
-            cell.onpointerover = () => onPointerOver(i);
+            cell.onpointerdown = (e) => {
+                e.preventDefault();
+                onPointerDown(i, e);
+            };
+
+            // Handle both pointerover (desktop) and pointermove (mobile)
+            cell.onpointerover = () => onPointerMove(i);
+            cell.onpointermove = (e) => {
+                e.preventDefault();
+                onPointerMove(i);
+            };
 
             this.gridElement.appendChild(cell);
             this.cells.push(cell);
@@ -110,13 +122,21 @@ export class GridRenderer {
                     // Determine connection direction (horizontal or vertical)
                     conn.className = 'conn ' + (coords1.r === coords2.r ? 'conn-h' : 'conn-v');
 
-                    // Position the connection
+                    // Position the connection - using CSS variables for responsive sizing
                     if (coords1.r === coords2.r) {
                         // Horizontal connection
-                        conn.style.left = coords1.c < coords2.c ? '100%' : '-17px';
+                        if (coords1.c < coords2.c) {
+                            conn.style.left = '100%';
+                        } else {
+                            conn.style.left = 'calc(-1 * var(--connection-h-width))';
+                        }
                     } else {
                         // Vertical connection
-                        conn.style.top = coords1.r < coords2.r ? '100%' : '-17px';
+                        if (coords1.r < coords2.r) {
+                            conn.style.top = '100%';
+                        } else {
+                            conn.style.top = 'calc(-1 * var(--connection-v-height))';
+                        }
                     }
 
                     this.cells[i].appendChild(conn);
