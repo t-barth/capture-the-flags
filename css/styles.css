@@ -37,6 +37,10 @@
         --cell-size: 70px;
         --grid-gap: 12px;
         --grid-padding: 16px;
+        --connection-h-width: 15px;
+        --connection-h-height: 18px;
+        --connection-v-width: 18px;
+        --connection-v-height: 15px;
     }
 }
 
@@ -130,11 +134,6 @@ button#overview-btn {
 
 button#reset-btn {
     background: var(--color-reset);
-}
-
-button#solution-btn {
-    background: #6c5ce7;
-    flex-basis: 100%;
 }
 
 .next-level-btn {
@@ -241,26 +240,6 @@ button#solution-btn {
     text-align: center;
 }
 
-#solution-display {
-    margin-top: 16px;
-    padding: 12px;
-    background: #f8f9fa;
-    border-radius: 8px;
-    font-family: 'Courier New', monospace;
-    font-size: clamp(0.7rem, 2.5vw, 0.9rem);
-    max-width: 95vw;
-    width: 100%;
-    max-width: 500px;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    display: none;
-    overflow-x: auto;
-}
-
-#solution-display.visible {
-    display: block;
-}
-
 /* Improve touch targets on mobile */
 @media (max-width: 479px) {
     button {
@@ -315,7 +294,7 @@ button#solution-btn {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     gap: 8px;
-    max-width: 500px;
+    max-width: 400px;
     width: 100%;
     padding: 12px;
     background: var(--color-white);
@@ -323,22 +302,21 @@ button#solution-btn {
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
-/* Tablet: 10 columns */
+/* Tablet: larger cells but still 5 columns */
 @media (min-width: 480px) {
     .level-grid {
-        grid-template-columns: repeat(10, 1fr);
         gap: 10px;
         padding: 16px;
+        max-width: 450px;
     }
 }
 
-/* Desktop: 10 columns with more spacing */
+/* Desktop: larger cells but still 5 columns */
 @media (min-width: 768px) {
     .level-grid {
-        grid-template-columns: repeat(10, 1fr);
         gap: 12px;
         padding: 20px;
-        max-width: 800px;
+        max-width: 500px;
     }
 }
 
@@ -385,6 +363,18 @@ button#solution-btn {
     animation: glow 2s ease-in-out infinite;
 }
 
+.level-btn.locked {
+    background: #dfe6e9;
+    color: #b2bec3;
+    cursor: not-allowed;
+    opacity: 0.5;
+    border-color: #b2bec3;
+}
+
+.level-btn.locked:active {
+    transform: none;
+}
+
 @keyframes glow {
     0%, 100% {
         box-shadow: 0 0 5px rgba(253, 203, 110, 0.5);
@@ -392,4 +382,107 @@ button#solution-btn {
     50% {
         box-shadow: 0 0 15px rgba(253, 203, 110, 0.8);
     }
+}
+
+/* Tutorial Button (spans full row) */
+.tutorial-btn-grid {
+    grid-column: 1 / -1;
+    aspect-ratio: 5 / 1;
+    background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%);
+    color: white;
+    font-size: clamp(1rem, 3vw, 1.2rem);
+    font-weight: 700;
+    border: 3px solid #6c5ce7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.tutorial-btn-grid:active {
+    transform: scale(0.98);
+}
+
+.tutorial-btn-grid::before {
+    content: '📚';
+    font-size: 1.5em;
+}
+
+/* Tutorial Overlay */
+.tutorial-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.tutorial-content {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    max-width: 500px;
+    width: 100%;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.tutorial-content h3 {
+    margin: 0 0 16px 0;
+    color: #6c5ce7;
+    font-size: clamp(1.2rem, 4vw, 1.5rem);
+    text-align: center;
+}
+
+.tutorial-content p {
+    margin: 0 0 24px 0;
+    color: #2d3436;
+    font-size: clamp(0.95rem, 3vw, 1.1rem);
+    line-height: 1.6;
+    white-space: pre-line;
+}
+
+.tutorial-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.tutorial-btn {
+    padding: 10px 16px;
+    background: #6c5ce7;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: clamp(0.9rem, 2.5vw, 1rem);
+    transition: background 0.2s;
+    min-width: 90px;
+}
+
+.tutorial-btn:hover {
+    background: #5f4dd1;
+}
+
+.tutorial-btn:active {
+    transform: scale(0.96);
+}
+
+.tutorial-btn:disabled {
+    background: #dfe6e9;
+    color: #b2bec3;
+    cursor: not-allowed;
+}
+
+#tutorial-progress {
+    color: #636e72;
+    font-size: clamp(0.85rem, 2.5vw, 0.95rem);
+    font-weight: 600;
 }
