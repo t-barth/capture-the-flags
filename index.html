@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Capture the Flags</title>
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <h2>🚩 Capture the Flags</h2>
+
+    <!-- Level Overview Screen (Starting Screen) -->
+    <div id="overview-screen" class="overview-screen">
+      <div class="overview-header">
+        <p>Wähle ein Level</p>
+      </div>
+      <div id="level-grid" class="level-grid"></div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="game-screen" class="game-screen hidden">
+      <div id="level-indicator" class="level-indicator"></div>
+
+      <div class="controls">
+        <button id="overview-btn">Levelübersicht</button>
+        <button id="reset-btn">Reset</button>
+        <button id="solution-btn">Show Solution</button>
+      </div>
+
+      <div id="grid" class="grid"></div>
+      <div id="success-msg"></div>
+
+      <button id="next-btn" class="next-level-btn" disabled>Nächstes Level</button>
+
+      <div id="solution-display"></div>
+    </div>
+
+    <script type="module" src="js/game.js"></script>
+  </body>
+</html>
