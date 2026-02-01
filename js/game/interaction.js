@@ -64,7 +64,8 @@ export class InteractionHandler {
 
         // Auto-complete when 3 cells selected
         if (this.currentSelection.length === 3) {
-            this.endDrag();
+            // Use setTimeout to ensure visual update completes before ending drag
+            setTimeout(() => this.endDrag(), 0);
         }
 
         return true;
