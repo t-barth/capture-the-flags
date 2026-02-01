@@ -45,7 +45,8 @@ export class GridRenderer {
             if (isDeadZone) {
                 cell.innerHTML = TEXT.DEAD_ZONE_MARKER;
             } else if (this.xPositions.includes(i)) {
-                cell.innerHTML = '<span class="flag-icon">🚩</span>';
+                // Flag shown via CSS ::before with --theme-flag variable
+                cell.classList.add('flag-icon');
             }
 
             // Attach event handlers

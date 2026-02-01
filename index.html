@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Capture the Flags</title>
     <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/animations.css" />
   </head>
   <body>
     <h2>🚩 Capture the Flags</h2>
@@ -13,6 +14,12 @@
     <div id="overview-screen" class="overview-screen">
       <div class="overview-header">
         <p>Wähle ein Level</p>
+        <div class="progress-container">
+          <div class="progress-bar">
+            <div id="progress-fill" class="progress-fill"></div>
+          </div>
+          <div id="progress-text" class="progress-text">0 / 100 abgeschlossen</div>
+        </div>
       </div>
       <div id="level-grid" class="level-grid"></div>
     </div>
@@ -45,6 +52,7 @@
       </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
     <script type="module" src="js/game.js"></script>
   </body>
 </html>

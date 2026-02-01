@@ -9,6 +9,8 @@ import { InteractionHandler } from './game/interaction.js';
 import { GRID_ROWS, GRID_COLS, FILLED_CELLS, FLAGS_PER_L_SHAPE, L_SHAPE_BOUNDING_BOX, TEXT, indexToCoords } from './utils/config.js';
 import { TOTAL_LEVELS } from './data/levels-data.js';
 import { TUTORIAL_LEVEL, TUTORIAL_STEPS } from './data/tutorial-data.js';
+import { CelebrationManager } from './utils/celebration.js';
+import { getThemeForLevel, applyTheme, getThemeDisplay } from './utils/themes.js';
 
 const STORAGE_KEY = 'ctf_completed_levels';
 
@@ -39,6 +41,8 @@ class CaptureTheFlagGame {
     this.nextBtn = document.getElementById('next-btn');
     this.levelIndicator = document.getElementById('level-indicator');
     this.overviewBtn = document.getElementById('overview-btn');
+    this.progressFill = document.getElementById('progress-fill');
+    this.progressText = document.getElementById('progress-text');
 
     // Tutorial elements
     this.tutorialOverlay = document.getElementById('tutorial-overlay');
@@ -125,7 +129,12 @@ class CaptureTheFlagGame {
     // Reset interaction state
     this.interactionHandler.clearUsedIndices();
 
-    // Update level indicator
+    // Apply theme for current level
+    const currentLevelNumber = this.levelManager.getCurrentLevelNumber();
+    const theme = getThemeForLevel(currentLevelNumber);
+    applyTheme(theme);
+
+    // Update level indicator with theme
     this.updateLevelIndicator();
 
     // Render the puzzle
@@ -143,7 +152,8 @@ class CaptureTheFlagGame {
     if (this.levelIndicator) {
       const current = this.levelManager.getCurrentLevelNumber();
       const total = this.levelManager.getTotalLevels();
-      this.levelIndicator.textContent = `Level ${current} / ${total}`;
+      const themeDisplay = getThemeDisplay(current);
+      this.levelIndicator.textContent = `${themeDisplay} - Level ${current} / ${total}`;
     }
   }
 
@@ -223,15 +233,30 @@ class CaptureTheFlagGame {
       this.saveCompletedLevels();
 
       this.successMsg.innerHTML = '🎉 Tutorial abgeschlossen! Bereit für die echten Level?';
+      CelebrationManager.levelComplete();
+
       setTimeout(() => {
         this.exitTutorial();
       }, 2000);
     } else {
       // Regular level completed
+      const currentLevel = this.levelManager.getCurrentLevelNumber();
       this.markLevelCompleted();
       this.successMsg.innerHTML = TEXT.SUCCESS_MESSAGE;
       this.nextBtn.disabled = false;
       this.nextBtn.classList.add('unlocked');
+
+      // Trigger celebration based on level milestone
+      if (currentLevel % 25 === 0 || currentLevel === 100) {
+        // Epic celebration for major milestones (25, 50, 75, 100)
+        CelebrationManager.milestoneComplete();
+      } else if (currentLevel % 10 === 0) {
+        // Bigger celebration for every 10th level
+        CelebrationManager.milestoneComplete();
+      } else {
+        // Regular celebration
+        CelebrationManager.levelComplete();
+      }
     }
   }
 
@@ -268,6 +293,9 @@ class CaptureTheFlagGame {
    */
   renderLevelOverview() {
     this.levelGrid.innerHTML = '';
+
+    // Update progress bar
+    this.updateProgressBar();
 
     // Add tutorial button (spans full row)
     const tutorialBtn = document.createElement('button');
@@ -389,6 +417,26 @@ class CaptureTheFlagGame {
     const currentLevel = this.levelManager.getCurrentLevelNumber();
     this.completedLevels.add(currentLevel);
     this.saveCompletedLevels();
+  }
+
+  /**
+   * Updates the progress bar based on completed levels
+   */
+  updateProgressBar() {
+    if (!this.progressFill || !this.progressText) return;
+
+    // Count only numeric levels (exclude 'tutorial')
+    const completedCount = [...this.completedLevels].filter(
+      (level) => typeof level === 'number'
+    ).length;
+
+    const percentage = (completedCount / TOTAL_LEVELS) * 100;
+
+    // Update progress bar
+    this.progressFill.style.width = `${percentage}%`;
+
+    // Update progress text
+    this.progressText.textContent = `${completedCount} / ${TOTAL_LEVELS} abgeschlossen`;
   }
 
   /**
